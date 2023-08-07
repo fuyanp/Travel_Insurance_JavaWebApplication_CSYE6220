@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<qualifiedTypeNameHistroy>
+    <fullyQualifiedTypeName name="java.util.List"/>
+    <fullyQualifiedTypeName name="com.google.gson.Gson"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.dao.InsuranceDAO"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.pojo.Insurance"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.pojo.Claims"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.dao.ClaimsDAO"/>
+    <fullyQualifiedTypeName name="javax.servlet.http.HttpSession"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.pojo.Employee"/>
+    <fullyQualifiedTypeName name="com.me.insuranceproject.pojo.Client"/>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Component"/>
+    <fullyQualifiedTypeName name="org.springframework.beans.factory.annotation.Qualifier"/>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Repository"/>
+    <fullyQualifiedTypeName name="com.me.pojo.Client"/>
+    <fullyQualifiedTypeName name="org.springframework.stereotype.Service"/>
+    <fullyQualifiedTypeName name="com.me.pojo.Claims"/>
+</qualifiedTypeNameHistroy>

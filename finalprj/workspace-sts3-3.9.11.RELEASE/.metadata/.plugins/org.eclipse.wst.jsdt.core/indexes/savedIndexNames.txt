@@ -1,0 +1,8 @@
+INDEX VERSION 1.4+/Users/fuyanping/Documents/workspace-sts3-3.9.11.RELEASE/.metadata/.plugins/org.eclipse.wst.jsdt.core/indexes
+2995221965.index
+2129757848.index
+1340556205.index
+1104777008.index
+518755285.index
+1055958002.index
+2093168211.index

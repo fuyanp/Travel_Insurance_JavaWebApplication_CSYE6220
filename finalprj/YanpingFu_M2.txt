@@ -1,0 +1,300 @@
+What have I done: implemented login/signup function, created database
+
+Plan for milestone3: finish function that make admin can manage employee/client and another function that allow client to manage their insurance and claims.
+
+Source code:
+1)
+package com.me.insuranceproject;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.me.insuranceproject.dao.ClientDAO;
+import com.me.insuranceproject.dao.EmployeeDAO;
+import com.me.insuranceproject.pojo.Client;
+import com.me.insuranceproject.pojo.Employee;
+
+@Controller
+public class LoginSignUpController {
+	@Autowired
+	Client c;
+	
+	@Autowired
+	Employee e;
+	
+	@RequestMapping(value = "/clientsignup.htm", method = RequestMethod.POST)
+	public String clientSignUp(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		c=new Client();
+		c.setDateOfBirth(request.getParameter("dob"));
+		c.setFirstName(request.getParameter("firstName"));
+		c.setLastName(request.getParameter("lastName"));
+		c.setGender(request.getParameter("gender"));
+		c.setEmail(request.getParameter("email"));
+		c.setPhone(request.getParameter("phone"));
+		clientdao.saveClient(c);
+		model.addAttribute("curclient", c );
+		
+		return "customerhome";
+	}
+	
+	@RequestMapping(value = "/clientsignin.htm", method = RequestMethod.POST)
+	public String clientSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		
+		c=clientdao.getClient(Integer.parseInt(request.getParameter("customerid")));
+		if(c!=null) {
+			if(c.getPasswrod().equals(request.getParameter("password"))) {
+			model.addAttribute("curclient", c );
+			return "customerhome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	@RequestMapping(value = "/employeesignin.htm", method = RequestMethod.POST)
+	public String employeeSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao) {
+		
+		e=employeedao.getEmployee(Integer.parseInt(request.getParameter("employeeid")));
+		if(e!=null) {
+			if(e.getPassword().equals(request.getParameter("password"))) {
+			model.addAttribute("curemployee", e );
+			return "employeehome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	@RequestMapping(value = "/adminsignin.htm", method = RequestMethod.POST)
+	public String adminSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao) {
+		
+		e=employeedao.getEmployee(Integer.parseInt(request.getParameter("employeeid")));
+		if(e!=null) {
+			if(e.getPassword().equals(request.getParameter("password"))) {
+			model.addAttribute("curadmin", e );
+			return "adminhome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	@RequestMapping(value = "/addemployee.htm", method = RequestMethod.POST)
+	public String addEmployee(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao) {
+		e=new Employee();
+		e.setDateOfBirth(request.getParameter("dob"));
+		e.setFirstName(request.getParameter("firstName"));
+		e.setLastName(request.getParameter("lastName"));
+		e.setGender(request.getParameter("gender"));
+		e.setEmail(request.getParameter("email"));
+		e.setPhone(request.getParameter("phone"));
+		employeedao.saveEmployee(e);
+		
+		return "adminhome";
+	}
+}
+
+2)
+package com.me.insuranceproject.dao;
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import com.me.insuranceproject.pojo.Client;
+
+public class ClientDAO extends DAO {
+
+	public void saveClient(Client client) {
+		try {
+			begin();
+			getSession().save(client);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+
+	public Client getClient(int id) {
+		return getSession().get(Client.class, id);
+	}
+
+	public void deleteClient(int id) {
+		try {
+			Client c=getSession().get(Client.class, id);
+			begin();
+			getSession().delete(c);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Client> getAllClients(){
+		return getSession().createQuery("SELECT a FROM Client a", Client.class).getResultList();
+		
+	}
+}
+
+3)
+package com.me.insuranceproject.dao;
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+
+import com.me.insuranceproject.pojo.Employee;
+import com.me.insuranceproject.pojo.Insurance;
+
+public class InsuranceDAO extends DAO {
+
+	public void saveInsurance(Insurance policy) {
+		try {
+			begin();
+			getSession().save(policy);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+
+	public Insurance getInsurance(String id) {
+		return getSession().get(Insurance.class, id);
+	}
+
+	public void deleteInsurance(String id) {
+		try {
+			Insurance p=getSession().get(Insurance.class, id);
+			begin();
+			getSession().delete(p);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Insurance> getAllInsurances(){
+		return getSession().createQuery("SELECT a FROM Insurance a", Insurance.class).getResultList();
+		
+	}
+}
+
+4)
+package com.me.insuranceproject.dao;
+
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import com.me.insuranceproject.pojo.Employee;
+
+public class EmployeeDAO extends DAO{
+	
+	
+	public void saveEmployee(Employee employee) {
+		try {
+			begin();
+			getSession().save(employee);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public Employee getEmployee(int id) {
+		return getSession().get(Employee.class, id);
+	}
+	
+	public void deleteEmployee(int id) {
+		try {
+			Employee e=getSession().get(Employee.class, id);
+			begin();
+			getSession().delete(e);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Employee> getAllClients(){
+		return getSession().createQuery("SELECT a FROM Employee a", Employee.class).getResultList();
+		
+	}
+}
+ 5)
+package com.me.insuranceproject.dao;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+
+public abstract class DAO {
+	private static final Logger log = Logger.getAnonymousLogger();
+	private static final ThreadLocal threadLocal = new ThreadLocal();
+	private static final SessionFactory sessionFactory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+    protected DAO() {
+    }
+
+    public static Session getSession()
+    {
+        Session session = (Session) DAO.threadLocal.get();
+        
+        if (session == null)
+        {
+            session = sessionFactory.openSession();
+            DAO.threadLocal.set(session);
+        }
+        return session;
+    }
+
+    protected void begin() {
+        getSession().beginTransaction();
+    }
+
+    protected void commit() {
+        getSession().getTransaction().commit();
+    }
+
+    protected void rollback() {
+        try {
+            getSession().getTransaction().rollback();
+        } catch (HibernateException e) {
+            log.log(Level.WARNING, "Cannot rollback", e);
+        }
+        try {
+            getSession().close();
+        } catch (HibernateException e) {
+            log.log(Level.WARNING, "Cannot close", e);
+        }
+        DAO.threadLocal.set(null);
+    }
+
+    public static void close() {
+        getSession().close();
+        DAO.threadLocal.set(null);
+    }
+}

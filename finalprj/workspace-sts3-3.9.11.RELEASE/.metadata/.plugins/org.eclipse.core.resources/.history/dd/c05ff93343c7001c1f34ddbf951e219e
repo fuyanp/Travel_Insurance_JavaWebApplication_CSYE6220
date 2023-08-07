@@ -1,0 +1,52 @@
+package com.me.dao;
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import com.me.insuranceproject.pojo.Insurance;
+
+public class InsuranceDAO extends DAO {
+
+	public void saveInsurance(Insurance policy) {
+		try {
+			begin();
+			getSession().save(policy);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+
+	public Insurance getInsurance(String id) {
+		return getSession().get(Insurance.class, id);
+	}
+
+	public void deleteInsurance(String id) {
+		try {
+			Insurance p=getSession().get(Insurance.class, id);
+			begin();
+			getSession().delete(p);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public void updateInsurance(Insurance policy) {
+		try {
+			begin();
+			getSession().update(policy);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Insurance> getAllInsurancesofClient(int clientid){
+		return getSession().createQuery("FROM Insurance WHERE cId = "+clientid, Insurance.class).getResultList();
+		
+	}
+}

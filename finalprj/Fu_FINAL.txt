@@ -1,0 +1,882 @@
+I, Yanping Fu, declare here that this is my own project and no part of this has been taken from anywhere else, unless stated, and this project has not been submitted for another class before.
+
+package com.me.insuranceproject;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+
+import com.me.dao.ClientDAO;
+import com.me.dao.EmployeeDAO;
+import com.me.pojo.Client;
+import com.me.pojo.Employee;
+
+@Controller
+public class LoginSignUpController {
+	@Autowired
+	Client c;
+	
+	@Autowired
+	Employee e;
+	
+	@RequestMapping(value = "/clientsignup.htm", method = RequestMethod.POST)
+	public String clientSignUp(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		c=new Client();
+		c.setDateOfBirth(java.sql.Date.valueOf(request.getParameter("dob")));
+		c.setFirstName(request.getParameter("firstName"));
+		c.setLastName(request.getParameter("lastName"));
+		c.setGender(request.getParameter("gender"));
+		c.setEmail(request.getParameter("email"));
+		c.setPhone(request.getParameter("phone"));
+                c.setPassword(request.getParameter("password"));
+		clientdao.saveClient(c);
+		 HttpSession s = request.getSession();
+	        s.setMaxInactiveInterval(1800);
+	        s.setAttribute("curclient", c);
+		model.addAttribute("curclient", c );
+		
+		return "customerhome";
+	}
+	
+	@RequestMapping(value = "/clientsignin.htm", method = RequestMethod.POST)
+	public String clientSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		HttpSession s = request.getSession();
+        s.setMaxInactiveInterval(1800);
+		c=clientdao.getClient(Integer.parseInt(request.getParameter("customerid")));
+                
+		if(c!=null) {
+			if(c.getPassword().equals(request.getParameter("password"))) {
+			model.addAttribute("curclient", c );
+			s.setAttribute("curclient", c);
+			return "customerhome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	@RequestMapping(value = "/employeesignin.htm", method = RequestMethod.POST)
+	public String employeeSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao) {
+		HttpSession s = request.getSession();
+        s.setMaxInactiveInterval(1800);
+		e=employeedao.getEmployee(Integer.parseInt(request.getParameter("employeeid")));
+		if(e!=null) {
+			if(e.getPassword().equals(request.getParameter("password"))) {
+			model.addAttribute("curemployee", e );
+                        s.setAttribute("curemployee", e);
+			return "employeehome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	@RequestMapping(value = "/adminsignin.htm", method = RequestMethod.POST)
+	public String adminSignIn(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao,ClientDAO clientdao) {
+		HttpSession s = request.getSession();
+        s.setMaxInactiveInterval(1800);
+		e=employeedao.getAdmin(Integer.parseInt(request.getParameter("employeeid")));
+		if(e!=null) {
+			if(e.getPassword().equals(request.getParameter("password"))) {
+			model.addAttribute("curadmin", e );
+                        s.setAttribute("curadmin", e);
+                        /*
+			List<Employee> elist=employeedao.getAllEmployees();
+			List<Client> clist=clientdao.getAllClients();
+			model.addAttribute("employeelist", elist );
+			model.addAttribute("clientlist", clist );
+                        */
+			return "adminhome";
+			}
+		}
+		
+		model.addAttribute("errormsg", "invalid id/password" );
+		return "index";
+	}
+	
+	
+        
+        @RequestMapping(value = "/signout.htm", method = RequestMethod.POST)
+	public String signOut(Model model,HttpServletRequest request,
+            HttpServletResponse response) {
+            HttpSession s = request.getSession();
+        s.removeAttribute("curadmin");
+        s.removeAttribute("curclient");
+        s.removeAttribute("curemployee");
+		return "index";
+	}
+        
+        
+}
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.me.insuranceproject;
+
+import com.google.gson.Gson;
+import com.me.dao.EmployeeDAO;
+import com.me.pojo.Employee;
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+/**
+ *
+ * @author fuyanping
+ */
+@Controller
+public class EmployeeController {
+
+    @Autowired
+    Employee e;
+
+    @RequestMapping(value = "/updateemployee.htm", method = RequestMethod.POST)
+    @ResponseBody
+    public String updateEmployee(Model model, HttpServletRequest request,
+            HttpServletResponse response, EmployeeDAO employeedao, @RequestParam("data") String em) {
+        
+        Gson gson=new Gson();
+        e=gson.fromJson(em, Employee.class);
+        employeedao.updateEmployee(e);
+        HttpSession s = request.getSession();
+        s.setMaxInactiveInterval(1800);
+        s.setAttribute("curemployee", e);
+
+        return "success";
+    }
+
+    @RequestMapping(value = "/addemployee.htm", method = RequestMethod.POST)
+    public String addEmployee(Model model, HttpServletRequest request,
+            HttpServletResponse response, EmployeeDAO employeedao) {
+        e = new Employee();
+        e.setDateOfBirth(java.sql.Date.valueOf(request.getParameter("dob")));
+        e.setFirstName(request.getParameter("firstName"));
+        e.setLastName(request.getParameter("lastName"));
+        e.setGender(request.getParameter("gender"));
+        e.setEmail(request.getParameter("email"));
+        e.setPhone(request.getParameter("phone"));
+        e.setJob(request.getParameter("jobtype"));
+        e.setPassword(request.getParameter("password"));
+        employeedao.saveEmployee(e);
+
+        return "adminhome";
+    }
+    /*
+    @RequestMapping(value = "/deleteemployee.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String removeEmployee(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao,@RequestParam("employeeid") String eid) {
+		employeedao.deleteEmployee(Integer.parseInt(eid));
+		//Gson gson=new Gson();
+		//String clientjson=gson.toJson(cl);
+		//model.addAttribute("curclient", c );
+		
+		return "success";
+	}*/
+        
+        @RequestMapping(value = "/getallemployees.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getAllEmployeetojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao) {
+                
+		List<Employee> el=employeedao.getAllEmployees();
+		Gson gson=new Gson();
+		String empjson=gson.toJson(el);
+                System.out.println(empjson);
+		//model.addAttribute("curclient", c );
+		
+		return empjson;
+	}
+}
+
+package com.me.insuranceproject;
+
+import java.util.List;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.me.dao.ClientDAO;
+import com.me.pojo.Client;
+import javax.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.RequestParam;
+
+@Controller
+public class ClientController {
+	@Autowired
+	Client c;
+	
+        
+	@RequestMapping(value = "/getallclients.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getAllClienttojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		List<Client> cl=clientdao.getAllClients();
+		Gson gson=new Gson();
+		String clientjson=gson.toJson(cl);
+		//model.addAttribute("curclient", c );
+		
+		return clientjson;
+	}
+	
+	@RequestMapping(value = "/getclientdetail.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String clientDetail(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao) {
+		Client cl=clientdao.getClient(Integer.parseInt(request.getParameter("rqclientid")));
+		Gson gson=new Gson();
+		String clientjson=gson.toJson(cl);
+		//model.addAttribute("curclient", c );
+		
+		return clientjson;
+	}
+	
+	@RequestMapping(value = "/updateclientinfo.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String updateClienttojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao,@RequestParam("firstName") String fn,@RequestParam("lastName") String ln,
+                    @RequestParam("dateofbirth") String dob,@RequestParam("email") String email,@RequestParam("gender") String gender,
+                    @RequestParam("password") String password,@RequestParam("phone") String phone) {
+		Gson gson=new Gson();
+               HttpSession s = request.getSession();
+		c=(Client)s.getAttribute("curclient");
+                //c=clientdao.getClient(1);
+		c.setDateOfBirth(java.sql.Date.valueOf(dob));
+		c.setEmail(email);
+		c.setFirstName(fn);
+		c.setLastName(ln);
+		c.setGender(gender);
+		c.setPassword(password);
+		c.setPhone(phone);
+		
+                //c.setLastName("newlastname");
+		clientdao.updateClient(c);
+                s.setAttribute("curclient", c);
+		//Gson gson=new Gson();
+		//String policyjson=gson.toJson(cl);
+		//model.addAttribute("curclient", c );
+		
+		return "success";
+	}
+}
+
+package com.me.insuranceproject;
+
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Controller;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+
+import com.google.gson.Gson;
+import com.me.dao.ClientDAO;
+import com.me.dao.EmployeeDAO;
+import com.me.dao.InsuranceDAO;
+import com.me.pojo.Client;
+import com.me.pojo.Employee;
+import com.me.pojo.Insurance;
+import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.util.List;
+import javax.servlet.http.HttpSession;
+import org.springframework.web.bind.annotation.RequestParam;
+@Controller
+public class InsuranceController {
+
+         @Autowired
+	Insurance cl;
+        
+         @Autowired
+	Client client;
+        
+        @Autowired
+	Employee e;
+	
+	@RequestMapping(value = "/getallinsurance.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getAllInsurance(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO cdao,InsuranceDAO policydao) {
+                HttpSession s = request.getSession();
+                Client c=(Client)s.getAttribute("curclient");
+                if(c==null) return "no client";
+                List<Insurance> clist=policydao.getAllInsurancesofClient(c);
+                Gson gson=new Gson();
+		if(clist.get(0)==null) return "policy null";
+		String policyjson=gson.toJson(clist);
+		return policyjson;
+	}
+	
+	@RequestMapping(value = "/getinsurance.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getInsurancetojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,InsuranceDAO policydao) {
+		cl=policydao.getInsurance(request.getParameter("policyid"));
+		Gson gson=new Gson();
+		String policyjson=gson.toJson(cl);
+		
+		return policyjson;
+	}
+	
+	@RequestMapping(value = "/addnewinsurance.htm", method = RequestMethod.POST)
+	public String buyInsurance(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao,EmployeeDAO employeedao,InsuranceDAO policydao) {
+		HttpSession s = request.getSession();
+		cl=new Insurance();
+		cl.setType(request.getParameter("type"));
+		cl.setAddress(request.getParameter("insuredaddress"));
+                client=(Client)s.getAttribute("curclient");
+                if(client==null) return "index";
+		cl.setClient(client);
+                String[] extrac=request.getParameterValues("covered");
+		cl.setCovered("Personal property, Electronic,Personal Liability, Loss of use, Medical payment to others,"+String.join(",", extrac));
+		cl.setDeductible(Integer.parseInt(request.getParameter("deductible")));
+                
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+                LocalDate date= LocalDate.parse(request.getParameter("startDate"));
+            
+                cl.setStartDate(java.sql.Date.valueOf(date));
+                date.plusDays(Integer.parseInt(request.getParameter("activelength")));
+		cl.setEndDate(java.sql.Date.valueOf(date));
+		
+		cl.setNameofinsured(request.getParameter("nameofinsured"));
+		cl.setStatus("Active");
+		
+		policydao.saveInsurance(cl);
+		
+		return "customerhome";
+	}
+	
+	@RequestMapping(value = "/updateInsurance.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String updateInsurancetojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,@RequestParam("policyid") String policyid,@RequestParam("status") String status, ClientDAO clientdao,EmployeeDAO employeedao,InsuranceDAO policydao) {
+		
+                //stop service
+		cl=policydao.getInsurance(policyid);
+                cl.setStatus(status);
+		policydao.updateInsurance(cl);
+		//Gson gson=new Gson();
+		//String policyjson=gson.toJson(cl);
+		//model.addAttribute("curclient", c );
+		
+		return "success";
+	}
+}
+
+package com.me.insuranceproject;
+
+import java.util.List;
+
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.RequestParam;
+
+import com.google.gson.Gson;
+import com.me.dao.ClaimsDAO;
+import com.me.dao.ClientDAO;
+import com.me.dao.EmployeeDAO;
+import com.me.dao.InsuranceDAO;
+import com.me.pojo.Claims;
+import com.me.pojo.Client;
+import com.me.pojo.Employee;
+import com.me.pojo.Insurance;
+import java.util.ArrayList;
+import javax.servlet.http.HttpSession;
+import org.springframework.stereotype.Controller;
+@Controller
+public class ClaimsController {
+
+	@Autowired
+	Claims claim;
+        
+        @Autowired
+	Client client;
+        
+        @Autowired
+	Employee e;
+
+	@RequestMapping(value = "/getallclaims.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getAllClaimstojsp(Model model, HttpServletRequest request, HttpServletResponse response,
+			ClaimsDAO claimsdao) {
+            HttpSession s = request.getSession();
+            client=(Client)s.getAttribute("curclient");
+		List<Claims> claimlist=new ArrayList<>();
+                claimlist= claimsdao.getAllClaimsofClient(client);
+		
+                Gson gson = new Gson();
+                if(claimlist==null) return "empty";
+		
+		String claimjson = gson.toJson(claimlist);
+		return claimjson;
+	}
+        
+        @RequestMapping(value = "/getallclaimstoprocess.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getAllClaimstoemployee(Model model, HttpServletRequest request, HttpServletResponse response,
+			ClaimsDAO claimsdao) {
+		List<Claims> claimlist;
+	        claimlist = claimsdao.getAllClaimstoprocess();
+		
+		Gson gson = new Gson();
+		String claimjson = gson.toJson(claimlist);
+		return claimjson;
+	}
+
+	@RequestMapping(value = "/getclaim.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String getClaimtojsp(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClaimsDAO claimsdao) {
+		claim=claimsdao.getClaim(Integer.parseInt(request.getParameter("cliamid")));
+		Gson gson=new Gson();
+		String policyjson=gson.toJson(claim);
+		//model.addAttribute("curclient", c );
+		
+		return policyjson;
+	}
+	
+	@RequestMapping(value = "/addclaim.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String addClaim(Model model,HttpServletRequest request,
+            HttpServletResponse response,ClientDAO clientdao,InsuranceDAO policydao,ClaimsDAO claimsdao) {
+		claim=new Claims();
+                Insurance p=policydao.getInsurance(request.getParameter("hiddenpolicyid"));
+                client=p.getClient();
+                if(client==null) return "no client";
+		claim.setClient(client);
+                claim.setPolicyid(p.getId());
+                claim.setPolicytype(p.getType());
+		claim.setClaimDate(java.time.LocalDate.now().toString());
+		claim.setClaimDescription(request.getParameter("description"));
+                //e=employeedao.getEmployee(Integer.parseInt(request.getParameter("empId")));
+		//claim.setEmployee(e);
+		claim.setStatus("wait");
+		claimsdao.saveClaim(claim);
+		//return "success";
+                return client.getFirstName()+"policyid: "+p.getId();
+		
+	}
+	
+	@RequestMapping(value = "/updateclaim.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String updateClaimtojsp(@RequestParam("claimid") String claimid,Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao,ClaimsDAO claimsdao) {
+                HttpSession s = request.getSession();
+		claim=claimsdao.getClaim(Integer.parseInt(claimid));
+                String status=claim.getStatus();
+                if(status.equals("wait")){
+                    claim.setStatus("processing");
+                }else if(status.equals("processing")){
+                    claim.setStatus("finished");
+                }else if(status.equals("finished")){
+                    claim.setStatus("wait");
+                }
+		
+                e=(Employee)s.getAttribute("curemployee");
+                claim.setEmployee(e);
+		claimsdao.updateClaims(claim);
+                return "success";
+		
+	}
+        
+        @RequestMapping(value = "/cancelclaim.htm", method = RequestMethod.POST)
+	@ResponseBody
+	public String cancelClaim(@RequestParam("claimid") String claimid,@RequestParam("status") String status,
+                Model model,HttpServletRequest request,
+            HttpServletResponse response,EmployeeDAO employeedao,ClaimsDAO claimsdao) {
+		//claim=claimsdao.getClaim(Integer.parseInt(claimid));
+                claim=claimsdao.getClaim(2);
+		claim.setStatus("cancel");
+		claimsdao.updateClaims(claim);
+				return "success";
+		
+	}
+}
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.me.dao;
+
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+import org.hibernate.HibernateException;
+import org.hibernate.Session;
+import org.hibernate.SessionFactory;
+import org.hibernate.cfg.Configuration;
+import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Repository;
+
+
+@Repository
+public abstract class DAO {
+	private static final Logger log = Logger.getAnonymousLogger();
+	private static final ThreadLocal threadLocal = new ThreadLocal();
+	private static final SessionFactory sessionFactory = new Configuration().configure("hibernate.cfg.xml").buildSessionFactory();
+
+    protected DAO() {
+    }
+
+    public static Session getSession()
+    {
+        Session session = (Session) DAO.threadLocal.get();
+        
+        if (session == null)
+        {
+            session = sessionFactory.openSession();
+            DAO.threadLocal.set(session);
+        }
+        return session;
+    }
+
+    protected void begin() {
+        getSession().beginTransaction();
+    }
+
+    protected void commit() {
+        getSession().getTransaction().commit();
+    }
+
+    protected void rollback() {
+        try {
+            getSession().getTransaction().rollback();
+        } catch (HibernateException e) {
+            log.log(Level.WARNING, "Cannot rollback", e);
+        }
+        try {
+            getSession().close();
+        } catch (HibernateException e) {
+            log.log(Level.WARNING, "Cannot close", e);
+        }
+        DAO.threadLocal.set(null);
+    }
+
+    public static void close() {
+        getSession().close();
+        DAO.threadLocal.set(null);
+    }
+}
+
+
+
+package com.me.dao;
+
+
+import static com.me.dao.DAO.getSession;
+import java.util.List;
+
+import org.hibernate.HibernateException;
+import org.springframework.stereotype.Component;
+
+import com.me.pojo.Employee;
+import com.me.pojo.Insurance;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class EmployeeDAO extends DAO{
+	
+	
+	public void saveEmployee(Employee employee) {
+		try {
+			begin();
+			getSession().save(employee);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public Employee getEmployee(int id) {
+		return getSession().get(Employee.class, id);
+	}
+        
+        public Employee getAdmin(int id) {
+            Criteria crit = getSession().createCriteria(Employee.class);
+            crit.add(Restrictions.eq("eId",id));
+            crit.add(Restrictions.eq("job","admin"));
+            Employee e=(Employee)crit.uniqueResult();
+            return e;
+	}
+	
+	public void deleteEmployee(int id) {
+		try {
+			Employee e=getSession().get(Employee.class, id);
+			begin();
+			getSession().delete(e);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Employee> getAllEmployees(){
+		return getSession().createQuery("FROM Employee WHERE JOB = 'employee'", Employee.class).getResultList();
+		
+	}
+        
+        public void updateEmployee(Employee employee) {
+		try {
+			begin();
+			getSession().update(employee);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+}
+
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.me.dao;
+
+import java.util.List;
+
+import org.hibernate.HibernateException;
+
+import com.me.pojo.Client;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class ClientDAO extends DAO {
+
+    public void saveClient(Client client) {
+        try {
+            begin();
+            getSession().save(client);
+            commit();
+        } catch (HibernateException e) {
+            System.out.print("HibernateException: " + e.getMessage());
+            rollback();
+        }
+    }
+
+    public Client getClient(int id) {
+        return getSession().get(Client.class, id);
+    }
+
+    public void deleteClient(int id) {
+        try {
+            Object persistentInstance = getSession().load(Client.class, id);
+            if (persistentInstance != null) {
+                getSession().delete(persistentInstance);
+            }
+            commit();
+        } catch (HibernateException e) {
+            System.out.print("HibernateException: " + e.getMessage());
+            rollback();
+        }
+    }
+
+    public void updateClient(Client client) {
+        try {
+            begin();
+            getSession().saveOrUpdate(client);
+            commit();
+        } catch (HibernateException e) {
+            System.out.print("HibernateException: " + e.getMessage());
+            rollback();
+        }
+    }
+
+    public List<Client> getAllClients() {
+        List<Client> cl=getSession().createQuery("FROM Client", Client.class).getResultList();
+        System.out.println(cl.get(0));
+        return cl;
+
+    }
+}
+
+package com.me.dao;
+
+import com.me.pojo.Client;
+import java.util.List;
+
+import org.hibernate.HibernateException;
+
+import com.me.pojo.Insurance;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class InsuranceDAO extends DAO {
+
+	public void saveInsurance(Insurance policy) {
+		try {
+			begin();
+			getSession().save(policy);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+
+	public Insurance getInsurance(String id) {
+		return getSession().get(Insurance.class, id);
+	}
+
+	public void deleteInsurance(String id) {
+		try {
+			Insurance p=getSession().get(Insurance.class, id);
+			begin();
+			getSession().delete(p);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public void updateInsurance(Insurance policy) {
+		try {
+			begin();
+			getSession().update(policy);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public List<Insurance> getAllInsurancesofClient(Client c){
+            Criteria crit = getSession().createCriteria(Insurance.class);
+            crit.add(Restrictions.eq("client",c));
+            List<Insurance> il=crit.list();
+            return il;
+            
+                
+		
+	}
+}
+
+package com.me.dao;
+
+import static com.me.dao.DAO.getSession;
+import java.util.List;
+
+import org.hibernate.HibernateException;
+
+import com.me.pojo.Claims;
+import com.me.pojo.Client;
+import org.hibernate.Criteria;
+import org.hibernate.criterion.Restrictions;
+import org.springframework.stereotype.Repository;
+
+@Repository
+public class ClaimsDAO extends DAO {
+	
+	public void saveClaim(Claims claim) {
+		try {
+			begin();
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+
+	public Claims getClaim(int id) {
+		return getSession().get(Claims.class, id);
+	}
+
+	public void deleteClaim(int id) {
+		try {
+			begin();
+			getSession().delete(Claims.class);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+	public void updateClaims(Claims claim) {
+		try {
+			begin();
+			getSession().update(claim);
+			commit();
+		} catch (HibernateException e) {
+			System.out.print("HibernateException: " + e.getMessage());
+			rollback();
+		}
+	}
+	
+        public List<Claims> getAllClaimstoprocess(){
+            Criteria crit = getSession().createCriteria(Claims.class);
+            crit.add(Restrictions.ne("status", "cancel"));
+            List<Claims> claimlist=crit.list();
+		//return getSession().createQuery("FROM Claims", Claims.class).getResultList();
+                return claimlist;
+		
+	}
+        
+	public List<Claims> getAllClaimsofClient(Client c){
+            Criteria crit = getSession().createCriteria(Claims.class);
+            crit.add(Restrictions.eq("client",c));
+            List<Claims> il=crit.list();
+            return il;
+		//return getSession().createQuery("FROM Claims c WHERE c.client.clientId = "+clientid, Claims.class).getResultList();
+		
+	}
+	
+	public List<Claims> getAllInsurancesofemployee(int employeeid){
+		return getSession().createQuery("FROM Claims c WHERE c.employee.eId = "+employeeid, Claims.class).getResultList();
+		
+	}
+}
+

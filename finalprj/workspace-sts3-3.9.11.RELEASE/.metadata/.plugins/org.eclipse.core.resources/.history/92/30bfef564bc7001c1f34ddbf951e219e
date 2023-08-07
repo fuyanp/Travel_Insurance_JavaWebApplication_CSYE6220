@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Apr 15, 2022, 8:26:52 PM by Hibernate Tools 3.5.0.Final -->
+<hibernate-mapping>
+    <class name="com.me.pojo.Claims" table="CLAIMS">
+        <id name="claimId" type="int">
+            <column name="claimsId" />
+            <generator class="native" />
+        </id>
+        <property name="empId" type="int">
+            <column name="empId" />
+        </property>
+        <property name="claimDate" type="java.lang.String">
+            <column name="claimDate" />
+        </property>
+        <property name="claimDescription" type="java.lang.String">
+            <column name="description" />
+        </property>
+        <property name="clientId" type="int">
+            <column name="clientId" />
+        </property>
+        <property name="status" type="java.lang.String">
+            <column name="status" />
+        </property>
+    </class>
+</hibernate-mapping>

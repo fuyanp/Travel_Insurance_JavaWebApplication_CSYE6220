@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated Apr 15, 2022, 8:26:52 PM by Hibernate Tools 3.5.0.Final -->
+<hibernate-mapping>
+    <class name="com.me.pojo.Insurance" table="INSURANCE">
+        <id name="Id" type="java.lang.String">
+            <column name="policyId" />
+            <generator class="uuid" />
+        </id>
+        <property name="type" type="java.lang.String">
+            <column name="type" />
+        </property>
+        <property name="clientId" type="int">
+            <column name="cId" />
+        </property>
+        <property name="eid" type="int">
+            <column name="eId" />
+        </property>
+        <property name="nameofinsured" type="java.lang.String">
+            <column name="nameofinsured" />
+        </property>
+        <property name="startDate" type="java.lang.String">
+            <column name="startDate" />
+        </property>
+        <property name="endDate" type="java.lang.String">
+            <column name="endDate" />
+        </property>
+        <property name="deductible" type="int">
+            <column name="deductible" />
+        </property>
+        <property name="address" type="java.lang.String">
+            <column name="address" />
+        </property>
+        <property name="status" type="java.lang.String">
+            <column name="status" />
+        </property>
+        <property name="covered" type="java.lang.String">
+            <column name="covered" />
+        </property>
+    </class>
+</hibernate-mapping>
